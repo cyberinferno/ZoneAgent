@@ -264,7 +264,7 @@ namespace ZoneAgent
                 }
             }
             if (DataReceived != null)
-                DataReceived.BeginInvoke(this, _encode.GetString(dataBuffer, 0, bytes), new AsyncCallback(cbDataRecievedCallbackComplete), this);
+                DataReceived.BeginInvoke(this, getBytes(dataBuffer, bytes), new AsyncCallback(cbDataRecievedCallbackComplete), this);
         }
         private void cbDataRecievedCallbackComplete(IAsyncResult result)
         {
@@ -281,6 +281,12 @@ namespace ZoneAgent
             }
         }
         #endregion
+        private byte[] getBytes(byte[] Buffer, int length)
+        {
+            byte[] dataBuff = new byte[length];
+            Array.Copy(Buffer, dataBuff, length);
+            return dataBuff;
+        }
         #region Properties and members
         private IPAddress _IP = IPAddress.None;
         private ConnectionStatus _ConStat;

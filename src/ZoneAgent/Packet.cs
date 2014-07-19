@@ -29,7 +29,6 @@ namespace ZoneAgent
             packet = CombineByteArray(packet, GetBytesFrom(Config.ZA_IP.ToString()));
             packet = CombineByteArray(packet, GetBytesFrom(GetNullString(16 - Config.ZA_IP.ToString().Length)));
             packet = CombineByteArray(packet, CreateReverseHexPacket(Config.ZA_PORT));
-            packet = CombineByteArray(packet, GetBytesFrom(GetNullString(2)));
             return packet;
         }
         /// <summary>
@@ -70,11 +69,7 @@ namespace ZoneAgent
         public static string GetCharName(byte[] packet, int index)
         {
             string character = "";
-            while (packet[index] != '\0')
-            {
-                character += ((char)packet[index]).ToString();
-                index++;
-            }
+            character = Encoding.Default.GetString(packet, index, 20).TrimEnd('\0');
             return character;
         }
         /// <summary>
@@ -94,26 +89,13 @@ namespace ZoneAgent
         public static byte[] AlterAccountServerPacket(byte[] packet)
         {
             var tempbytes = Crypt.Decrypt(packet);
-            tempbytes[35] = tempbytes[34];
-            tempbytes[34] = tempbytes[33];
-            tempbytes[33] = Convert.ToByte(1);
-            tempbytes[32] = 0x00;
-            tempbytes[223] = tempbytes[222];
-            tempbytes[222] = tempbytes[221];
-            tempbytes[221] = Convert.ToByte(1);
-            tempbytes[220] = 0x00;
-            tempbytes[411] = tempbytes[410];
-            tempbytes[410] = tempbytes[409];
-            tempbytes[409] = Convert.ToByte(1);
-            tempbytes[408] = 0x00;
-            tempbytes[599] = tempbytes[598];
-            tempbytes[598] = tempbytes[597];
-            tempbytes[597] = Convert.ToByte(1);
-            tempbytes[596] = 0x00;
-            tempbytes[787] = tempbytes[786];
-            tempbytes[786] = tempbytes[785];
-            tempbytes[785] = Convert.ToByte(1);
-            tempbytes[784] = 0x00;
+            for (int i = 32; i <= 784; i += 188)
+            {
+                tempbytes[i + 3] = tempbytes[i + 2];
+                tempbytes[i + 2] = tempbytes[i + 1];
+                tempbytes[i + 1] = Convert.ToByte(1);
+                tempbytes[i] = 0x00;
+            }
             return Crypt.Encrypt(tempbytes);
         }
 
@@ -127,7 +109,6 @@ namespace ZoneAgent
         {
             var packet = new byte[4] { 0x1F, 0x00, 0x00, 0x00 };
             packet = CombineByteArray(packet, CreateReverseHexPacket(clientId));
-            packet = CombineByteArray(packet, GetBytesFrom(GetNullString(8 - packet.Length)));
             var temp = new byte[] { 0x02, 0xe3 };
             packet = CombineByteArray(packet, CombineByteArray(temp, GetBytesFrom(accountId)));
             packet = CombineByteArray(packet, GetBytesFrom(GetNullString(31 - packet.Length)));
@@ -144,7 +125,6 @@ namespace ZoneAgent
         {
             var packet = new byte[] { 0x92, 0x00, 0x00, 0x00 };
             packet = CombineByteArray(packet, CreateReverseHexPacket(clientId));
-            packet = CombineByteArray(packet, GetBytesFrom(GetNullString(8 - packet.Length)));
             packet = CombineByteArray(packet, new byte[] { 0x01, 0xE1 });
             packet = CombineByteArray(packet, GetBytesFrom(accountId));
             packet = CombineByteArray(packet, GetBytesFrom(GetNullString(52 - packet.Length)));
@@ -163,7 +143,6 @@ namespace ZoneAgent
         {
             byte[] packet = new byte[] { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xE1 };
             packet = CombineByteArray(packet, CreateReverseHexPacket(Config.PLAYER_COUNT));
-            packet = CombineByteArray(packet, GetBytesFrom(GetNullString(14 - packet.Length)));
             packet = CombineByteArray(packet, new byte[] { 0x03, 0x03 });
             return packet;
         }
@@ -173,33 +152,6 @@ namespace ZoneAgent
         /// <returns>current timestamp</returns>
         public static string GetTime()
         {
-            /*string time = "" + DateTime.Now.Year;
-            string temp = "" + DateTime.Now.Month;
-            if (temp.Length == 1)
-                temp = "0" + temp;
-            time += temp;
-            temp = "" + DateTime.Now.Day;
-            if (temp.Length == 1)
-                temp = "0" + temp;
-            time += temp;
-            time += '\0';
-            temp = "" + DateTime.Now.Hour;
-            if (temp.Length == 1)
-                temp = "0" + temp;
-            time += temp;
-            temp = "" + DateTime.Now.Minute;
-            if (temp.Length == 1)
-                temp = "0" + temp;
-            time += temp;
-            temp = "" + DateTime.Now.Second;
-            if (temp.Length == 1)
-                temp = "0" + temp;
-            time += temp;
-            if (time.Length < 16)
-            {
-                for (int i = time.Length; i < 16; i++)
-                    time += '\0';
-            }*/
             string time = DateTime.Now.ToString("yyyyMMdd") + '\0' + DateTime.Now.ToString("HHmmss") + '\0';
             return time;
         }
@@ -216,7 +168,6 @@ namespace ZoneAgent
         {
             byte[] packet = new byte[] { 0x30, 0x00, 0x00, 0x00 };
             packet = CombineByteArray(packet, CreateReverseHexPacket(clientid));
-            packet = CombineByteArray(packet,GetBytesFrom(GetNullString(8-packet.Length)));
             packet = CombineByteArray(packet, new byte[] { 0x02,0xE2,0x00});
             packet = CombineByteArray(packet, GetBytesFrom(username));
             packet = CombineByteArray(packet, GetBytesFrom(GetNullString(32 - packet.Length)));
@@ -232,7 +183,6 @@ namespace ZoneAgent
         {
             byte[] packet = new byte[] { 0x0B, 0x00, 0x00, 0x00 };
             packet = CombineByteArray(packet, CreateReverseHexPacket(clientid));
-            packet = CombineByteArray(packet, GetBytesFrom(GetNullString(8 - packet.Length)));
             packet = CombineByteArray(packet, new byte[] { 0x01, 0xE2, 0x00 });
             return packet;
         }
@@ -257,26 +207,20 @@ namespace ZoneAgent
                 packetType = Config.AS_PACKET;
             else if (packet[10] == 0x23 && packet[11] == 0x23)//For KH Crest
                 packetType = Config.AS_PACKET;
-            else if (packet[10] == 0x07 && packet[11] == 0x11)//ZoneServer entry packet
-                playerInformation.ZoneStatus = Config.ZS_ID;
             else if (packet[10] == 0x08 && packet[11] == 0x11)//Disconnet Packet from ZS
                 packetType = Config.DISCONNECT_PACKET;
-            else if (packet[10] == 0x1B && packet[11] == 0x50)//Disconnet Packet from BS
+            else if (packet[10] == 0x1B && packet[11] == 0x50 && playerInformation.ZoneStatus == Config.BS_ID)//Disconnet Packet from BS
                 packetType = Config.DISCONNECT_PACKET;
             else if (packet[10] == 0x01 && packet[11] == 0xA0)//Create char packet
                 packetType = Config.AS_PACKET;
             else if (packet[10] == 0x02 && packet[11] == 0xA0)//Delete char packet
                 packetType = Config.AS_PACKET;
+            else if (packet[10] == 0x00 && packet[11] == 0xC0)//Payment info packet
+                packetType = Config.PAYMENT_PACKET;
             else if (packet[10] == 0x00 && packet[11] == 0x37)//BattleServer entry Packet
-            {
-                playerInformation.ZoneStatus = Config.BS_ID;
                 packetType = Config.BS_PACKET;
-            }
             else if (packet[10] == 0x01 && packet[11] == 0x35)//BattleServer exit Packet
-            {
-                playerInformation.ZoneStatus = Config.ZS_ID;
                 packetType = Config.ZS_PACKET;
-            }
             return packetType;
         }
         /// <summary>
@@ -346,7 +290,10 @@ namespace ZoneAgent
         /// <returns></returns>
         public static byte[] DisplayPing(int clientID,long ping)
         {
-            byte[] packet = new byte[] { 0x1E, 0xB9, 0x41, 0x01, 0x55, 0xBB, 0x4C, 0x9F, 0x7B, 0xAE, 0x2E, 0xB5, 0x0C, 0xFF, 0xFF, 0xFF, 0xFF, 0x4E, 0x4F, 0x54, 0x49, 0x43, 0x45, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+            byte[] packet = new byte[4];
+            packet = CreateReverseHexPacket(clientID);
+            packet = CombineByteArray(packet, new byte[] { 0x03, 0xFF, 0x00, 0x18 });
+            packet = CombineByteArray(packet, new byte[] { 0x0C, 0xFF, 0xFF, 0xFF, 0xFF, 0x4E, 0x4F, 0x54, 0x49, 0x43, 0x45, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
             packet = CombineByteArray(packet, GetBytesFrom("Wz:"+Config.WZ+"  "));
             packet = CombineByteArray(packet, GetBytesFrom("Exp:" + Config.EXP + "  "));
             packet = CombineByteArray(packet, GetBytesFrom("Quest Exp:" + Config.QUEST_EXP + "  "));
@@ -355,14 +302,11 @@ namespace ZoneAgent
                 packet = CombineByteArray(packet, GetBytesFrom("Ping:"+ping.ToString()+" ms"));
             else
                 packet = CombineByteArray(packet, GetBytesFrom("Ping:---"));
-            packet = CombineByteArray(packet,GetBytesFrom(GetNullString(102-packet.Length)));
+            int MsgLength = packet.Length - 34;
+            MsgLength %= 4;
+            packet = CombineByteArray(packet, GetBytesFrom(GetNullString(4 - MsgLength)));
+            packet = CombineByteArray(CreateReverseHexPacket(packet.Length + 4), packet);
             var tempBytes = Crypt.Encrypt(packet);
-            var id = CreateReverseHexPacket(clientID);
-            id=CombineByteArray(id,GetBytesFrom(GetNullString(4-id.Length)));
-            for (int i = 4; i < 7; i++)
-            {
-                tempBytes[i] = id[i - 4];
-            }
             return tempBytes;
             
         }
@@ -399,34 +343,26 @@ namespace ZoneAgent
                 j++;
 
             }
-            /*
-            string temp = status;
-            string wz = "";
-            int i = temp.IndexOf('[');
-            int j = temp.IndexOf(']');
-            wz+="-"+temp.Substring(i+1,(j-i)-1).Trim();
-            i++;
-            j++;
-            i = temp.IndexOf('[',i);
-            j = temp.IndexOf(']',j);
-            wz += "-" + temp.Substring(i + 1, (j - i)-1).Trim();
-            i++;
-            j++;
-            i = temp.IndexOf('[',i);
-            j = temp.IndexOf(']',j);
-            wz += "-" + temp.Substring(i + 1, (j - i)-1).Trim();
-            i++;
-            j++;
-            i = temp.IndexOf('[',i);
-            j = temp.IndexOf(']',j);
-            wz += "-" + temp.Substring(i + 1, (j - i)-1).Trim();
-            StreamWriter s = new StreamWriter("chktest");
-            s.WriteLine(wz);
-            s.Close();
-            Config.WZ = status.Substring(42, 5);
-            Config.EXP = status.Substring(55, 5);
-            Config.QUEST_EXP = status.Substring(74, 5);
-            Config.DROP_RATE = status.Substring(93, 5);*/
+        }
+
+        /// <summary>
+        /// Payement information when client clicks Check Payment Info.
+        /// </summary>
+        /// <param name="clientID">uniq id of client</param>
+        /// <returns>payement information</returns>
+        public static byte[] PrivateMessage(int clientID,string message)
+        {
+            byte[] packet = new byte[4];
+            packet = CreateReverseHexPacket(clientID);
+            packet = CombineByteArray(packet, new byte[] { 0x03, 0xFF, 0x00, 0x18 });
+            packet = CombineByteArray(packet, new byte[] { 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x53, 0x59, 0x53, 0x54, 0x45, 0x4D, 0x00, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0x00 });
+            packet = CombineByteArray(packet, GetBytesFrom(message));
+            int MsgLength = packet.Length - 34;
+            MsgLength %= 4;
+            packet = CombineByteArray(packet, GetBytesFrom(GetNullString(4 - MsgLength)));
+            packet = CombineByteArray(CreateReverseHexPacket(packet.Length + 4), packet);
+            var tempBytes = Crypt.Encrypt(packet);
+            return tempBytes;
         }
 
         /// <summary>
@@ -449,26 +385,18 @@ namespace ZoneAgent
         /// <returns>byte[] obtained from string data</returns>
         public static byte[] GetBytesFrom(string str)
         {
-            var encoding = new ASCIIEncoding();
-            Byte[] bytes = encoding.GetBytes(str);
+            Byte[] bytes = Encoding.Default.GetBytes(str);
             return bytes;
         }
         /// <summary>
-        /// Creating reverse byte[] of int value
+        /// Creating reverse byte[4] of int32 value
         /// </summary>
         /// <param name="num">int value</param>
         /// <returns>reverse byte[] of int value</returns>
         private static byte[] CreateReverseHexPacket(int num)
         {
-            if (num == 0)
-                return new byte[] {0x00, 0x00};
-            string hexPort = string.Format("{0:x}", num);
-            while (hexPort.Length < 4)
-                hexPort = "0" + hexPort;
-            string temp = hexPort[2] + hexPort[3].ToString();
-            string temp1 = hexPort[0] + hexPort[1].ToString();
-            var tempByte = new[] { Convert.ToByte(temp, 16), Convert.ToByte(temp1, 16) };
-            return tempByte;
+            byte[] byteArray = BitConverter.GetBytes(num);
+            return byteArray;
         }
         /// <summary>
         /// Creating null string of specified no. of length
@@ -502,6 +430,15 @@ namespace ZoneAgent
                 }
             }
             return newPacket;
+        }
+        public static byte[] DuplicateUserDCPacket(byte[] packet)
+        {
+            packet[8] = 0x02;
+            packet[9] = 0xE2;
+            var tempByte = new byte[32];
+            Array.Copy(packet, 0, tempByte, 0, 32);
+            tempByte = CombineByteArray(tempByte, GetBytesFrom(GetTime()));
+            return tempByte;
         }
     }
 }

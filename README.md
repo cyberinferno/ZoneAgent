@@ -42,6 +42,8 @@ Things that are working
 Features Added
 --------------
 1. Ping display.
+2. Payement shout.
+3. GM shouts.
 
 Issues
 ------
@@ -58,3 +60,4 @@ Thanks To
 ---------
 1. Cyberinferno (https://github.com/cyberinferno) for initial code and invaluable help
 2. chrissdegrece (http://forum.ragezone.com/members/775128.html) of Ragezone forums who gaved zoneagent code in vb
+3. prologos (https://github.com/prologos) for his contribution

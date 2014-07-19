@@ -16,12 +16,29 @@ D:\A3 Source\ZoneAgent\ZoneAgent\obj\Debug\ZoneAgent.csprojResolveAssemblyRefere
 D:\A3 Source\ZoneAgent\ZoneAgent\obj\Debug\ZoneAgent.Main.resources
 D:\A3 Source\ZoneAgent\ZoneAgent\obj\Debug\ZoneAgent.Properties.Resources.resources
 D:\A3 Source\ZoneAgent\ZoneAgent\obj\Debug\ZoneAgent.csproj.GenerateResource.Cache
+C:\Users\Soul\Documents\GitHub\ZoneAgent\src\ZoneAgent\bin\Debug\ZoneAgent.exe.config
+C:\Users\Soul\Documents\GitHub\ZoneAgent\src\ZoneAgent\bin\Debug\ZoneAgent.exe
+C:\Users\Soul\Documents\GitHub\ZoneAgent\src\ZoneAgent\bin\Debug\ZoneAgent.pdb
+C:\Users\Soul\Documents\GitHub\ZoneAgent\src\ZoneAgent\obj\Debug\ZoneAgent.csprojResolveAssemblyReference.cache
+C:\Users\Soul\Documents\GitHub\ZoneAgent\src\ZoneAgent\obj\Debug\ZoneAgent.Main.resources
+C:\Users\Soul\Documents\GitHub\ZoneAgent\src\ZoneAgent\obj\Debug\ZoneAgent.Properties.Resources.resources
+C:\Users\Soul\Documents\GitHub\ZoneAgent\src\ZoneAgent\obj\Debug\ZoneAgent.csproj.GenerateResource.Cache
+C:\Users\Soul\Documents\GitHub\ZoneAgent\src\ZoneAgent\obj\Debug\ZoneAgent.exe
+C:\Users\Soul\Documents\GitHub\ZoneAgent\src\ZoneAgent\obj\Debug\ZoneAgent.pdb
 D:\A3 Source\ZoneAgent\src\ZoneAgent\bin\Debug\ZoneAgent.exe.config
-D:\A3 Source\ZoneAgent\src\ZoneAgent\obj\Debug\ZoneAgent.exe
-D:\A3 Source\ZoneAgent\src\ZoneAgent\obj\Debug\ZoneAgent.pdb
 D:\A3 Source\ZoneAgent\src\ZoneAgent\bin\Debug\ZoneAgent.exe
 D:\A3 Source\ZoneAgent\src\ZoneAgent\bin\Debug\ZoneAgent.pdb
-D:\A3 Source\ZoneAgent\src\ZoneAgent\obj\Debug\ZoneAgent.csprojResolveAssemblyReference.cache
 D:\A3 Source\ZoneAgent\src\ZoneAgent\obj\Debug\ZoneAgent.Main.resources
 D:\A3 Source\ZoneAgent\src\ZoneAgent\obj\Debug\ZoneAgent.Properties.Resources.resources
 D:\A3 Source\ZoneAgent\src\ZoneAgent\obj\Debug\ZoneAgent.csproj.GenerateResource.Cache
+D:\A3 Source\ZoneAgent\src\ZoneAgent\obj\Debug\ZoneAgent.exe
+D:\A3 Source\ZoneAgent\src\ZoneAgent\obj\Debug\ZoneAgent.pdb
+D:\ZoneAgent\src\ZoneAgent\obj\Debug\ZoneAgent.csprojResolveAssemblyReference.cache
+D:\ZoneAgent\src\ZoneAgent\obj\Debug\ZoneAgent.Main.resources
+D:\ZoneAgent\src\ZoneAgent\obj\Debug\ZoneAgent.Properties.Resources.resources
+D:\ZoneAgent\src\ZoneAgent\obj\Debug\ZoneAgent.csproj.GenerateResource.Cache
+D:\ZoneAgent\src\ZoneAgent\bin\Debug\ZoneAgent.exe.config
+D:\ZoneAgent\src\ZoneAgent\bin\Debug\ZoneAgent.exe
+D:\ZoneAgent\src\ZoneAgent\bin\Debug\ZoneAgent.pdb
+D:\ZoneAgent\src\ZoneAgent\obj\Debug\ZoneAgent.exe
+D:\ZoneAgent\src\ZoneAgent\obj\Debug\ZoneAgent.pdb

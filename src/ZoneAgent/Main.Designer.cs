@@ -1,4 +1,4 @@
-﻿namespace ZoneAgent
+namespace ZoneAgent
 {
     partial class Main
     {
@@ -32,7 +32,6 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
             this.label4 = new System.Windows.Forms.Label();
             this.btnclose = new System.Windows.Forms.Button();
-            this.zonelog = new System.Windows.Forms.RichTextBox();
             this.lbllssockstatus = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.lstzone = new System.Windows.Forms.ListBox();
@@ -52,12 +51,22 @@
             this.lblconnectioncount = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.refreshzonestatus = new System.Windows.Forms.Timer(this.components);
+            this.label7 = new System.Windows.Forms.Label();
+            this.next_msg = new System.Windows.Forms.Label();
+            this.label9 = new System.Windows.Forms.Label();
+            this.shout_interval = new System.Windows.Forms.TextBox();
+            this.btnReload = new System.Windows.Forms.Button();
+            this.btnStart = new System.Windows.Forms.Button();
+            this.manual_msg = new System.Windows.Forms.TextBox();
+            this.label11 = new System.Windows.Forms.Label();
+            this.noRefresh = new System.Windows.Forms.CheckBox();
+            this.zonelog = new System.Windows.Forms.RichTextBox();
             this.SuspendLayout();
             // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(2, 201);
+            this.label4.Location = new System.Drawing.Point(2, 218);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(268, 13);
             this.label4.TabIndex = 81;
@@ -66,7 +75,7 @@
             // 
             // btnclose
             // 
-            this.btnclose.Location = new System.Drawing.Point(178, 323);
+            this.btnclose.Location = new System.Drawing.Point(178, 477);
             this.btnclose.Name = "btnclose";
             this.btnclose.Size = new System.Drawing.Size(75, 23);
             this.btnclose.TabIndex = 80;
@@ -74,18 +83,10 @@
             this.btnclose.UseVisualStyleBackColor = true;
             this.btnclose.Click += new System.EventHandler(this.btnclose_Click);
             // 
-            // zonelog
-            // 
-            this.zonelog.Location = new System.Drawing.Point(14, 234);
-            this.zonelog.Name = "zonelog";
-            this.zonelog.Size = new System.Drawing.Size(239, 82);
-            this.zonelog.TabIndex = 79;
-            this.zonelog.Text = "";
-            // 
             // lbllssockstatus
             // 
             this.lbllssockstatus.AutoSize = true;
-            this.lbllssockstatus.Location = new System.Drawing.Point(111, 217);
+            this.lbllssockstatus.Location = new System.Drawing.Point(111, 203);
             this.lbllssockstatus.Name = "lbllssockstatus";
             this.lbllssockstatus.Size = new System.Drawing.Size(142, 13);
             this.lbllssockstatus.TabIndex = 78;
@@ -94,7 +95,7 @@
             // label15
             // 
             this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(14, 217);
+            this.label15.Location = new System.Drawing.Point(14, 371);
             this.label15.Name = "label15";
             this.label15.Size = new System.Drawing.Size(74, 13);
             this.label15.TabIndex = 77;
@@ -111,7 +112,7 @@
             // lblconnectedzonecount
             // 
             this.lblconnectedzonecount.AutoSize = true;
-            this.lblconnectedzonecount.Location = new System.Drawing.Point(153, 113);
+            this.lblconnectedzonecount.Location = new System.Drawing.Point(121, 113);
             this.lblconnectedzonecount.Name = "lblconnectedzonecount";
             this.lblconnectedzonecount.Size = new System.Drawing.Size(13, 13);
             this.lblconnectedzonecount.TabIndex = 75;
@@ -122,9 +123,9 @@
             this.label12.AutoSize = true;
             this.label12.Location = new System.Drawing.Point(13, 113);
             this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(135, 13);
+            this.label12.Size = new System.Drawing.Size(107, 13);
             this.label12.TabIndex = 74;
-            this.label12.Text = "Connected Zone Servers  :";
+            this.label12.Text = "Connected Servers  :";
             // 
             // lblzoneport
             // 
@@ -229,7 +230,7 @@
             // lblconnectioncount
             // 
             this.lblconnectioncount.AutoSize = true;
-            this.lblconnectioncount.Location = new System.Drawing.Point(174, 6);
+            this.lblconnectioncount.Location = new System.Drawing.Point(174, 7);
             this.lblconnectioncount.Name = "lblconnectioncount";
             this.lblconnectioncount.Size = new System.Drawing.Size(13, 13);
             this.lblconnectioncount.TabIndex = 83;
@@ -238,7 +239,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 6);
+            this.label1.Location = new System.Drawing.Point(12, 7);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(149, 13);
             this.label1.TabIndex = 82;
@@ -250,21 +251,122 @@
             this.refreshzonestatus.Interval = 2000;
             this.refreshzonestatus.Tick += new System.EventHandler(this.refreshzonestatus_Tick);
             // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(13, 233);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(55, 13);
+            this.label7.TabIndex = 88;
+            this.label7.Text = "Next Msg:";
+            // 
+            // next_msg
+            // 
+            this.next_msg.AutoSize = true;
+            this.next_msg.Location = new System.Drawing.Point(69, 233);
+            this.next_msg.Name = "next_msg";
+            this.next_msg.Size = new System.Drawing.Size(78, 13);
+            this.next_msg.TabIndex = 89;
+            this.next_msg.Text = "Stopped Shout";
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(13, 260);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(64, 13);
+            this.label9.TabIndex = 90;
+            this.label9.Text = "Interval(ms):";
+            // 
+            // shout_interval
+            // 
+            this.shout_interval.Location = new System.Drawing.Point(81, 257);
+            this.shout_interval.Name = "shout_interval";
+            this.shout_interval.Size = new System.Drawing.Size(43, 20);
+            this.shout_interval.TabIndex = 91;
+            this.shout_interval.Text = "60000";
+            // 
+            // btnReload
+            // 
+            this.btnReload.Location = new System.Drawing.Point(141, 257);
+            this.btnReload.Name = "btnReload";
+            this.btnReload.Size = new System.Drawing.Size(51, 23);
+            this.btnReload.TabIndex = 92;
+            this.btnReload.Text = "Reload";
+            this.btnReload.UseVisualStyleBackColor = true;
+            this.btnReload.Click += new System.EventHandler(this.btnReload_Click);
+            // 
+            // btnStart
+            // 
+            this.btnStart.Location = new System.Drawing.Point(201, 257);
+            this.btnStart.Name = "btnStart";
+            this.btnStart.Size = new System.Drawing.Size(51, 23);
+            this.btnStart.TabIndex = 92;
+            this.btnStart.Text = "Start";
+            this.btnStart.UseVisualStyleBackColor = true;
+            this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
+            // 
+            // manual_msg
+            // 
+            this.manual_msg.Location = new System.Drawing.Point(13, 296);
+            this.manual_msg.Name = "manual_msg";
+            this.manual_msg.Size = new System.Drawing.Size(241, 20);
+            this.manual_msg.TabIndex = 93;
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(0, 356);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(268, 13);
+            this.label11.TabIndex = 81;
+            this.label11.Text = "---------------------------------------------------------------------------------" +
+    "------";
+            // 
+            // noRefresh
+            // 
+            this.noRefresh.AutoSize = true;
+            this.noRefresh.Checked = true;
+            this.noRefresh.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.noRefresh.Location = new System.Drawing.Point(16, 483);
+            this.noRefresh.Name = "noRefresh";
+            this.noRefresh.Size = new System.Drawing.Size(80, 17);
+            this.noRefresh.TabIndex = 95;
+            this.noRefresh.Text = "No Refresh";
+            this.noRefresh.UseVisualStyleBackColor = true;
+            // 
+            // zonelog
+            // 
+            this.zonelog.Location = new System.Drawing.Point(15, 387);
+            this.zonelog.Name = "zonelog";
+            this.zonelog.Size = new System.Drawing.Size(237, 84);
+            this.zonelog.TabIndex = 96;
+            this.zonelog.Text = "";
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
-            this.ClientSize = new System.Drawing.Size(267, 354);
+            this.ClientSize = new System.Drawing.Size(267, 505);
+            this.Controls.Add(this.zonelog);
+            this.Controls.Add(this.noRefresh);
+            this.Controls.Add(this.manual_msg);
+            this.Controls.Add(this.btnStart);
+            this.Controls.Add(this.btnReload);
+            this.Controls.Add(this.shout_interval);
+            this.Controls.Add(this.label9);
+            this.Controls.Add(this.next_msg);
+            this.Controls.Add(this.label7);
             this.Controls.Add(this.lblpreparedconnectioncount);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.lblmaxconnectioncount);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.lblconnectioncount);
             this.Controls.Add(this.label1);
+            this.Controls.Add(this.label11);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.btnclose);
-            this.Controls.Add(this.zonelog);
             this.Controls.Add(this.lbllssockstatus);
             this.Controls.Add(this.label15);
             this.Controls.Add(this.lstzone);
@@ -293,7 +395,6 @@
 
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Button btnclose;
-        private System.Windows.Forms.RichTextBox zonelog;
         public System.Windows.Forms.Label lbllssockstatus;
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.ListBox lstzone;
@@ -313,6 +414,16 @@
         private System.Windows.Forms.Label lblconnectioncount;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Timer refreshzonestatus;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label next_msg;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.TextBox shout_interval;
+        private System.Windows.Forms.Button btnReload;
+        private System.Windows.Forms.Button btnStart;
+        private System.Windows.Forms.Label label11;
+        public System.Windows.Forms.TextBox manual_msg;
+	private System.Windows.Forms.CheckBox noRefresh;
+    private System.Windows.Forms.RichTextBox zonelog;
     }
 }
 

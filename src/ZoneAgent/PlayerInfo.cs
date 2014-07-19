@@ -1,5 +1,4 @@
-﻿using System.Net.Sockets;
-namespace ZoneAgent
+﻿namespace ZoneAgent
 {
     /// <summary>
     /// Class to save player information
@@ -11,6 +10,7 @@ namespace ZoneAgent
         public string Time { get; set; } // stores and returns timestamp
         public bool Prepared { get; set; } // true=user prepared ; false=user not prepared
         public int ZoneStatus { get; set; } //true=user in game ; false=user not in game
+        public string CharName { get; set; }
         /// <summary>
         /// Constructor that stores refrences
         /// </summary>
@@ -24,7 +24,7 @@ namespace ZoneAgent
             Time = time;
             Prepared = prepared;
             ZoneStatus = zoneStatus;
-
+            CharName = null;
         }
     }
 }

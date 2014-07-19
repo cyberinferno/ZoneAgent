@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using System.Windows.Forms;
-using System.IO;
 using System.Net.NetworkInformation;
 namespace ZoneAgent
 {
@@ -30,6 +27,10 @@ namespace ZoneAgent
         Ping ping;//to ping ip
         PingReply reply;//to get reply of ping
         Random randomId;//to generate random client id initially its temporary and will not be used
+        Main _Main; // Reference of Main class to access objects
+        public static Timer GMShout; //timer to send GM messages
+        Button ShoutManually; //Button created run time
+
         /// <summary>
         /// Constructor
         /// Will create instance with specified ip and port
@@ -37,7 +38,7 @@ namespace ZoneAgent
         /// 1)ConnectionStatusChanged when change in connection status
         /// 2)DataReceived when data is received
         /// </summary>
-        public ZoneAgent()
+        public ZoneAgent(Main _Main)
         {
             //For LoginServer
             LS = new EventDrivenTCPClient(Config.LS_IP, Config.LS_PORT);
@@ -45,7 +46,7 @@ namespace ZoneAgent
             LS.DataReceived += LS_DataReceived;
             //For AccountServer
             AS = new EventDrivenTCPClient(Config.AS_IP, Config.AS_PORT);
-            AS.DataReceived += AS_DataReceived;
+            AS.DataReceived += ZS_DataReceived;
             AS.ConnectionStatusChanged += AS_ConnectionStatusChanged;
             //For ZoneServer
             ZS = new EventDrivenTCPClient(Config.ZS_IP, Config.ZS_PORT);
@@ -53,7 +54,7 @@ namespace ZoneAgent
             ZS.ConnectionStatusChanged += ZS_ConnectionStatusChanged;
             //For BattleServer
             BS = new EventDrivenTCPClient(Config.BS_IP, Config.BS_PORT);
-            BS.DataReceived += BS_DataReceived;
+            BS.DataReceived += ZS_DataReceived;
             BS.ConnectionStatusChanged += BS_ConnectionStatusChanged;
 
             clients = new List<Client>();//initializing list of clients
@@ -63,16 +64,29 @@ namespace ZoneAgent
             randomId = new Random();
             
             //Timer to send report packet to LoginServer every 5 seconds
-            LSReporter = new Timer();
-            LSReporter.Interval = 5000;
+            LSReporter = new Timer {Interval = 5000};
             LSReporter.Tick += LSReporter_Tick;
             //Timer to display ping to each player
-            PingDisplay = new Timer();
-            PingDisplay.Interval = 7000;
+            PingDisplay = new Timer {Interval = 7000};
             PingDisplay.Tick += PingDisplay_Tick;
             PingDisplay.Enabled = true;
             PingDisplay.Start();
-            
+
+            this._Main = _Main; // Taking refrence of main form
+
+            //timer to send messages to client
+            GMShout = new Timer();
+            GMShout.Tick += GMShout_Tick;
+
+            //Button created runtime to send custom messages to client
+            ShoutManually = new Button();
+            ShoutManually.Size = new System.Drawing.Size(243, 27);
+            ShoutManually.Text = "Shout Manually";
+            ShoutManually.Location = new System.Drawing.Point(12, 325);
+            ShoutManually.Click += ShoutManually_Click;
+
+            _Main.Controls.Add(ShoutManually); //adding control i.e button on form
+
             //Connect to servers one by one
             try
             {
@@ -87,8 +101,18 @@ namespace ZoneAgent
                 Logger.Write(Logger.GetLoggerFileName("ZoneAgent"), "Connect : " + connect.ToString());
             }
         }
+
         /// <summary>
-        /// Will display ping to every player refresh time 10 seconds
+        /// Will be executed when ShoutManually button is clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void ShoutManually_Click(object sender, EventArgs e)
+        {
+            SendMessage(_Main.manual_msg.Text);
+        }
+        /// <summary>
+        /// Will display ping to every player refresh time 7 seconds
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -103,10 +127,10 @@ namespace ZoneAgent
                         var clientAddress = (IPEndPoint)client.TcpClient.Client.RemoteEndPoint;
                         ping = new Ping();
                         reply = ping.Send(clientAddress.Address);
-                        if (reply.Status == IPStatus.Success)
-                            Write(client.TcpClient, Packet.DisplayPing(client.UniqID, reply.RoundtripTime));
-                        else
-                            Write(client.TcpClient, Packet.DisplayPing(client.UniqID, 1000));
+                        Write(client.TcpClient,
+                              reply.Status == IPStatus.Success
+                                  ? Packet.DisplayPing(client.UniqID, reply.RoundtripTime)
+                                  : Packet.DisplayPing(client.UniqID, 1000));
                     }
 
                 }
@@ -117,6 +141,44 @@ namespace ZoneAgent
             }
         }
 
+        /// <summary>
+        /// Send a GM message to the user connection
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void GMShout_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                SendMessage(Config.GMShout_list[Config.GMShout_count]);
+                Config.GMShout_count++;
+                if (Config.GMShout_count >= Config.GMShout_list.Length - 1) { Config.GMShout_count = 0; }
+                _Main.Show_Next_ShoutMsg(Config.GMShout_list[Config.GMShout_count]);
+            }
+            catch (Exception gmMessages)
+            {
+                Logger.Write(Logger.GetLoggerFileName("ZoneAgent"), "GM Message : " + gmMessages);
+            }
+        }
+        /// <summary>
+        /// will send given message to all clients
+        /// </summary>
+        /// <param name="message">message</param>
+        void SendMessage(string message)
+        {
+            foreach (var client in clients)
+            {
+                if (player[client.UniqID].ZoneStatus == Config.ZS_ID || player[client.UniqID].ZoneStatus == Config.BS_ID)
+                {
+                    Write(client.TcpClient, Packet.PrivateMessage(client.UniqID, message));
+                }
+            }
+        }
+        /// <summary>
+        /// Will send Report packet to LoginServer at interval
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         void LSReporter_Tick(object sender, EventArgs e)
         {
             try
@@ -149,7 +211,7 @@ namespace ZoneAgent
                 LSReporter.Enabled = true;
                 LSReporter.Start();
             }
-            else if (status == EventDrivenTCPClient.ConnectionStatus.DisconnectedByHost)
+            else
             {
                 if(Config.isLSConnected)
                     Logger.Write("LoginServer.log", "LoginServer Disconnected");
@@ -168,7 +230,7 @@ namespace ZoneAgent
         {
             try
             {
-                var packet = Encoding.Default.GetBytes(data.ToString());
+                var packet = (byte[])Convert.ChangeType(data, typeof(byte[]));
                 switch (packet.Length)
                 {
                     case 40://login
@@ -180,6 +242,11 @@ namespace ZoneAgent
                             var accountid = Encoding.ASCII.GetString(packet).Substring(10, 15).Trim().TrimEnd('\0');
                             player.Add(clientid, new PlayerInfo(accountid, Packet.GetTime(), false, -1));
                             Config.PLAYER_COUNT++;
+                            if (Config.PLAYER_COUNT > Config.MAX_PLAYER_COUNT) { Config.MAX_PLAYER_COUNT = Config.PLAYER_COUNT; }
+                            //player count update
+                            _Main.Update_Player_Count();
+                            //zonelog update
+                            _Main.Update_zonelog("<LC> UID = " + clientid.ToString() + " " + accountid + " Prepared");
                         }
                         break;
                     case 48://duplicate login ; request DC to ZA from loginserver
@@ -188,12 +255,34 @@ namespace ZoneAgent
                         var ClientID = Packet.GetClientId(tempByte);
                         if (player.ContainsKey(ClientID))
                         {
+                            for (int i = clients.Count - 1; i >= 0; i--)
+                            {
+                                if (clients[i].UniqID == ClientID)
+                                {
+                                    lock (clients)
+                                    {
+                                        clients[i].TcpClient.GetStream().Close();
+                                        clients.Remove(player[ClientID].Client);
+                                    }
+                                    break;
+                                }
+                            }
+                            Config.PLAYER_COUNT--;
+                            //player count update
+                            _Main.Update_Player_Count();
+                            //zonelog update
+                            _Main.Update_zonelog("<LC> UID = " + ClientID.ToString() + " Dropped, Reason = Duplicate login");
+                            LS.Send(Packet.DuplicateUserDCPacket(packet));
+                            if (player[ClientID].ZoneStatus == Config.ZS_ID)
+                            {
+                                ZS.Send(Packet.SendDCToASZS(ClientID));
+                            }
+                            else if(player[ClientID].ZoneStatus == Config.BS_ID)
+                            {
+                                BS.Send(Packet.SendDCToASZS(ClientID));
+                            }
                             player.Remove(ClientID);
-                            LS.Send(Packet.TrimPacket(packet, 48));
                         }
-                        LS.Send(Packet.TrimPacket(packet, 48));
-                        //Logger.WriteTransactionLog(Encoding.ASCII.GetString(packet).Substring(11).Trim() + " duplicate login!");
-                        // TODO: Send DC to client
                         break;
                     default://if any other packet received
                         Logger.WriteBytes(Logger.GetLoggerFileName("LSNEW"), packet);
@@ -220,45 +309,11 @@ namespace ZoneAgent
                 Config.isASConnected = true;
                 Config.CONNECTED_SERVER_COUNT++;
             }
-            else if (status == EventDrivenTCPClient.ConnectionStatus.DisconnectedByHost)
+            else
             {
                 if(Config.isASConnected)
                     Logger.Write("AccountServer.log", "AccountServer Disconnected");
                 Config.isASConnected = false;
-            }
-        }
-        /// <summary>
-        /// AccountServer Data Received methd
-        /// Will be executed when data is received from AccountServer
-        /// </summary>
-        /// <param name="sender">EventDrivenTCPClient object</param>
-        /// <param name="data">byte[] data</param>
-        void AS_DataReceived(EventDrivenTCPClient sender, object data)
-        {
-            try
-            {
-                var packet = Encoding.Default.GetBytes(data.ToString());
-                //File.WriteAllBytes("AS_" + Environment.TickCount + "_" + packet.Length, packet);
-                var temp = new byte[4];
-                Array.Copy(packet, 4, temp, 0, 4);
-                int id = Packet.GetClientId(temp);
-                if (player.ContainsKey(id))
-                {
-                    var playerinfo = player[id];
-                    switch (packet.Length)
-                    {
-                        case 952://chacater packet received from AccountServer(.acl file)
-                            Write(playerinfo.Client.TcpClient, Packet.AlterAccountServerPacket(packet));
-                            break;
-                        default://other byte size packet received
-                            Write(playerinfo.Client.TcpClient, packet);
-                            break;
-                    }
-                }
-            }
-            catch (Exception ASDataArrival)
-            {
-                Logger.Write(Logger.GetLoggerFileName("AccountServer"), "AccountServer DataReceived : "+ASDataArrival.ToString());
             }
         }
         /// <summary>
@@ -276,7 +331,7 @@ namespace ZoneAgent
                 Config.isZSConnected = true;
                 Config.CONNECTED_SERVER_COUNT++;
             }
-            else if (status == EventDrivenTCPClient.ConnectionStatus.DisconnectedByHost)
+            else
             {
                 if (Config.isZSConnected)
                     Logger.Write("ZoneServer.log", "ZoneServer Disconnected");
@@ -294,43 +349,77 @@ namespace ZoneAgent
         {
             try
             {
-                var packet = Encoding.Default.GetBytes(data.ToString());
+                var packet = (byte[])Convert.ChangeType(data, typeof(byte[]));
                 //File.WriteAllBytes("OGZS_" + Environment.TickCount + "_" + packet.Length, packet);
-                List<byte[]> packetList = new List<byte[]>();
+                Application.DoEvents();
+                var packetList = new List<byte[]>();
+                Application.DoEvents();
                 packetList.Clear();
+                Application.DoEvents();
                 Packet.SplitPackets(packet, packet.Length, ref packetList);
-                for (int i = 0; i < packetList.Count; i++)
+                foreach (var t in packetList)
                 {
-                    //File.WriteAllBytes("ZS_" + Environment.TickCount + "_" + packetList[i].Length, packetList[i]);
                     var temp = new byte[4];
-                    Array.Copy(packetList[i], 4, temp, 0, 4);
-                    int id = Packet.GetClientId(temp);
+                    Array.Copy(t, 4, temp, 0, 4);
+                    var id = Packet.GetClientId(temp);
                     if (player.ContainsKey(id))
                     {
                         var playerinfo = player[id];
                         //Below condition is for disconneting client or reconnecting client
-                        if (packetList[i][10] == 0x08 && packetList[i][11] == 0x11)
+                        if (playerinfo.ZoneStatus == Config.AS_ID)
                         {
-                            Config.PLAYER_COUNT--;
-                            playerinfo.Prepared = false;
-                            LS.Send(Packet.SendDCToLS(id, playerinfo.Account, Packet.GetTime()));
-                            playerinfo.ZoneStatus = -1;
-                            ZS.Send(Packet.SendDCToASZS(id));
-                            player.Remove(id);
-                            if (clients.Contains(playerinfo.Client))
+                            if (t.Length == 952)
                             {
-                                lock (clients)
-                                {
-                                    clients.Remove(playerinfo.Client);
-                                }
+                                Write(playerinfo.Client.TcpClient, Packet.AlterAccountServerPacket(t));
+                            }
+                            else
+                            {
+                                Write(playerinfo.Client.TcpClient, t);
                             }
                         }
-                        //Below condition is to reduce chance of other packets come under same conditions
-                        Write(playerinfo.Client.TcpClient, packetList[i]);
-                        if (packetList[i][10] == 0x00 && packetList[i][11] == 0x18 && packetList[i][12] == 0x74 && packetList[i][13] == 0xCE && packetList[i][14] == 0xCA && packetList[i][15] == 0xE9 && packetList[i][16] == 0x87 && packetList[i][17] == 0x7F && packetList[i][18] == 0xAB)
+                        else
                         {
-                            var tempPacket = packetList[i];
-                            Packet.SetStatusValues(tempPacket);
+                            Write(playerinfo.Client.TcpClient, t);
+                            //Below condition is for disconneting client or reconnecting client
+                            if (t.Length == 12 && t[10] == 0x08 && t[11] == 0x11)
+                            {
+                                Config.PLAYER_COUNT--;
+                                //player count update
+                                _Main.Update_Player_Count();
+                                //zonelog update
+                                _Main.Update_zonelog("<LC> UID = " + id + " " + playerinfo.Account + " User Left");
+
+                                playerinfo.Prepared = false;
+                                LS.Send(Packet.SendDCToLS(id, playerinfo.Account, Packet.GetTime()));
+                                playerinfo.ZoneStatus = -1;
+                                ZS.Send(Packet.SendDCToASZS(id));
+                                player.Remove(id);
+                                if (clients.Contains(playerinfo.Client))
+                                {
+                                    lock (clients)
+                                    {
+                                        clients.Remove(playerinfo.Client);
+                                    }
+                                }
+                            }
+                            //Set Character Name
+                            else if (t.Length == 39 && t[10] == 0x06 && t[11] == 0x11)
+                            {
+                                playerinfo.CharName = Packet.GetCharName(Crypt.Decrypt(t), 12);
+                            }
+                            //Below condition is to reduce chance of other packets come under same conditions
+                            else if (t.Length > 18 && t[10] == 0x00 && t[11] == 0x18 && t[12] == 0x74 && t[13] == 0xCE && t[14] == 0xCA && t[15] == 0xE9 && t[16] == 0x87 && t[17] == 0x7F && t[18] == 0xAB)
+                            {
+                                var tempPacket = t;
+                                Packet.SetStatusValues(tempPacket);
+                            }
+                        }
+                        //Zone changed Packet : ZoneStatus Change
+                        if (t.Length == 11 && t[8] == 0x01 && t[9] == 0xE1)
+                        {
+                            //zonelog update
+                            _Main.Update_zonelog(playerinfo.Account + " (" + id + ") user zone changed " + playerinfo.ZoneStatus + " -> " + t[10]);
+                            playerinfo.ZoneStatus = t[10];
                         }
                     }
                 }
@@ -355,43 +444,11 @@ namespace ZoneAgent
                 Config.isBSConnected = true;
                 Config.CONNECTED_SERVER_COUNT++;
             }
-            else if (status == EventDrivenTCPClient.ConnectionStatus.DisconnectedByHost)
+            else
             {
                 if (Config.isBSConnected)
                     Logger.Write("BattleServer.log", "BattleServer Disonnected");
                 Config.isBSConnected = false;
-            }
-        }
-        /// <summary>
-        /// BattleServer Data Received method
-        /// Will be executed when data is received from BattleServer
-        /// </summary>
-        /// <param name="sender">EventDrivenTCPClient object</param>
-        /// <param name="data">byte[] data</param>
-        void BS_DataReceived(EventDrivenTCPClient sender, object data)
-        {
-            try
-            {
-                var packet = Encoding.Default.GetBytes(data.ToString());
-                //File.WriteAllBytes("OGZS_" + Environment.TickCount + "_" + packet.Length, packet);
-                List<byte[]> packetList = new List<byte[]>();
-                packetList.Clear();
-                Packet.SplitPackets(packet, packet.Length, ref packetList);
-                for (int i = 0; i < packetList.Count; i++)
-                {
-                    var temp = new byte[4];
-                    Array.Copy(packetList[i], 4, temp, 0, 4);
-                    int id = Packet.GetClientId(temp);
-                    if (player.ContainsKey(id))
-                    {
-                        var playerinfo = player[id];
-                        Write(playerinfo.Client.TcpClient, packetList[i]);
-                    }
-                }
-            }
-            catch (Exception BSDataArrival)
-            {
-                Logger.Write(Logger.GetLoggerFileName("BattleServer"), "BattleServer DataReceived : " + BSDataArrival.ToString());
             }
         }
         /// <summary>
@@ -411,14 +468,14 @@ namespace ZoneAgent
         {
             try
             {
-                TcpClient client = ZA.EndAcceptTcpClient(asyncResult);
+                var client = ZA.EndAcceptTcpClient(asyncResult);
                 var buffer = new byte[client.ReceiveBufferSize];
                 var newClient = new Client(client, buffer,randomId.Next());
                 lock (clients)
                 {
                     clients.Add(newClient);
                 }
-                NetworkStream networkStream = newClient.NetworkStream;
+                var networkStream = newClient.NetworkStream;
                 networkStream.BeginRead(newClient.Buffer, 0, newClient.Buffer.Length, OnDataRead, newClient);
                 ZA.BeginAcceptTcpClient(ClientHandler, null);
             }
@@ -439,9 +496,9 @@ namespace ZoneAgent
             {
                 if (client == null)
                     return;
-                NetworkStream networkStream = client.NetworkStream;
+                var networkStream = client.NetworkStream;
                 var newClientEp = (IPEndPoint)client.TcpClient.Client.RemoteEndPoint;
-                int read = networkStream.EndRead(asyncResult);
+                var read = networkStream.EndRead(asyncResult);
                 if (read == 0 || read < 10)
                 {
                     lock (clients)
@@ -451,7 +508,6 @@ namespace ZoneAgent
                     }
                 }
                 var packet = client.Buffer;
-                //File.WriteAllBytes(Environment.TickCount+"_"+read, Packet.TrimPacket(packet,read));
                 PlayerInfo playerInformation=null;
                 if (player.ContainsKey(client.UniqID))
                     playerInformation = player[client.UniqID];
@@ -475,14 +531,11 @@ namespace ZoneAgent
                             playerInfo.ZoneStatus = Config.AS_ID;
                             playerInfo.Client = client;
                             LS.Send(Packet.CreateClientStatusPacket(clientId, playerInfo.Account));
+                            //zonelog update
+                            _Main.Update_zonelog(playerInfo.Account + "(" + newClientEp.Address.ToString() + ") User Joined");
                             var character = Packet.CreateGetCharacterPacket(clientId, playerInfo.Account, newClientEp.Address.ToString());
                             AS.Send(character);
                         }
-                        //else
-                        //{
-                        //   Console.WriteLine("Possible attempt of bypass of login server using client ID " + clientId + " and IP " + newClientEp.Address);
-                        //Logger.WriteTransactionLog("Possible attempt of bypass of login server using client ID " + clientId + " and IP " + newClientEp.Address);
-                        //}
                         break;
                     case Config.AS_PACKET: //Sends packet to AccountServer
                         AS.Send(Packet.AddClientID(packet, client.UniqID, read));
@@ -497,23 +550,30 @@ namespace ZoneAgent
                         if (player.ContainsKey(client.UniqID))
                         {
                             Config.PLAYER_COUNT--;
+                            //player count update
+                            _Main.Update_Player_Count();
                             var playerinfo = player[client.UniqID];
                             playerinfo.Prepared = false;
                             LS.Send(Packet.SendDCToLS(client.UniqID, playerinfo.Account, Packet.GetTime()));
+                            //zonelog update
+                            _Main.Update_zonelog("<LC> UID = " + client.UniqID + " " + playerinfo.Account + " User Left");
                             if (playerinfo.ZoneStatus==Config.ZS_ID)
-                            {//to disconnect from zoneserver
+                            {
+                                //to disconnect from zoneserver
                                 playerinfo.ZoneStatus = -1;
                                 ZS.Send(Packet.AddClientID(packet, client.UniqID, read));
                                 ZS.Send(Packet.SendDCToASZS(client.UniqID));
                             }
                             else if (playerinfo.ZoneStatus == Config.BS_ID)
-                            {//to disconnect from battleserver
+                            {
+                                //to disconnect from battleserver
                                 playerinfo.ZoneStatus = -1;
                                 BS.Send(Packet.AddClientID(packet, client.UniqID, read));
                                 BS.Send(Packet.SendDCToASZS(client.UniqID));
                             }
                             else
-                            {//to disconnect from character selection screen
+                            {
+                                //to disconnect from character selection screen
                                 AS.Send(Packet.AddClientID(packet, client.UniqID, read));
                                 AS.Send(Packet.SendDCToASZS(client.UniqID));
                             }
@@ -524,6 +584,9 @@ namespace ZoneAgent
                             }
                         }
                         Write(client.TcpClient, Packet.AddClientID(packet, client.UniqID, read));
+                        break;
+                    case Config.PAYMENT_PACKET:
+                        Write(client.TcpClient, Packet.PrivateMessage(client.UniqID,Config.PayMsg));
                         break;
                 }
                 networkStream.BeginRead(client.Buffer, 0, client.Buffer.Length, OnDataRead, client);
@@ -560,8 +623,10 @@ namespace ZoneAgent
             }
             catch (Exception writeCallBack)
             {
-                Logger.Write(Logger.GetLoggerFileName("ZoneAgent"), "WriteCallBack : " + writeCallBack.ToString());
+                Logger.Write(Logger.GetLoggerFileName("ZoneAgent"), "WriteCallBack : " + writeCallBack);
             }
         }
+
+        
     }
 }

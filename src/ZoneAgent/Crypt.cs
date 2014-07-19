@@ -7,12 +7,6 @@ namespace ZoneAgent
     /// </summary>
     class Crypt
     {
-        [DllImportAttribute("asdecr.dll", EntryPoint = "decrypt_acl", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int decrypt_acl(IntPtr acldata, int size, int header);
-
-        [DllImportAttribute("asdecr.dll", EntryPoint = "encrypt_acl", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int encrypt_acl(IntPtr acldata, int size, int header);
-
         /// <summary>
         /// To decrypt packet data
         /// </summary>
@@ -20,12 +14,17 @@ namespace ZoneAgent
         /// <returns>returns decrypted data</returns>
         public static byte[] Decrypt(byte[] packet)
         {
-            var length = packet.Length;
-            IntPtr unmanagedPointer = Marshal.AllocHGlobal(length);
-            Marshal.Copy(packet, 0, unmanagedPointer, length);
-            Crypt.decrypt_acl(unmanagedPointer, length, 0);
-            Marshal.Copy(unmanagedPointer, packet, 0, length);
-            Marshal.FreeHGlobal(unmanagedPointer);
+            //[0]-[11]: Packet Header
+            for(int i = 12; i + 4 <= packet.Length; i += 4)
+            {
+                int DynamicKey = Config.m_DynamicKey;
+                for (int j = i; j < i + 4; j++)
+                {
+                    byte pSrc = packet[j];
+                    packet[j] = (byte)(packet[j] ^ (DynamicKey >> 8));
+                    DynamicKey = (pSrc + DynamicKey) * Config.m_ConstKey1 + Config.m_ConstKey2;
+                }
+            }
             return packet;
         }
         /// <summary>
@@ -35,12 +34,16 @@ namespace ZoneAgent
         /// <returns>returns encrypted packet</returns>
         public static byte[] Encrypt(byte[] packet)
         {
-            var length = packet.Length;
-            IntPtr unmanagedPointer = Marshal.AllocHGlobal(length);
-            Marshal.Copy(packet, 0, unmanagedPointer, length);
-            Crypt.encrypt_acl(unmanagedPointer, length, 0);
-            Marshal.Copy(unmanagedPointer, packet, 0, length);
-            Marshal.FreeHGlobal(unmanagedPointer);
+            //[0]-[11]: Packet Header
+            for (int i = 12; i + 4 <= packet.Length; i += 4)
+            {
+                int DynamicKey = Config.m_DynamicKey;
+                for (int j = i; j < i + 4; j++)
+                {
+                    packet[j] = (byte)(packet[j] ^ (DynamicKey >> 8));
+                    DynamicKey = (packet[j] + DynamicKey) * Config.m_ConstKey1 + Config.m_ConstKey2;
+                }
+            }
             return packet;
         }
     }
